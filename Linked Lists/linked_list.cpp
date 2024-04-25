@@ -6,10 +6,11 @@
  *  Created on: May 4, 2024
  *      Author: Luke Lyall
  * 
- *  Time Complexity:
- *      Read: O(1)
- *      Insert: O(n)
- *      Delete: O(n)
+ *  Average Time Complexity:
+ *      Read: O(n)
+ *      Search: O(n)
+ *      Insert: O(1)
+ *      Delete: O(1)
  */
 
 struct Node {
