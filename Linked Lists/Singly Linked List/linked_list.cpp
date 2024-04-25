@@ -72,7 +72,7 @@ class LinkedList {
 
   private:
     Node* head;
-    Node*tail;
+    Node* tail;
 };
 
 int main() {
