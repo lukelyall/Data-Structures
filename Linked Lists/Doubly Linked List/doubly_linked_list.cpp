@@ -1,5 +1,3 @@
-#include <iostream>
-
 /*
  * doubly_linked_list.cpp
  *
@@ -12,6 +10,8 @@
  *      Insert: O(1)
  *      Delete: O(1)
  */
+
+#include <iostream>
 
 struct Node {
   int data; // any data type can be added
