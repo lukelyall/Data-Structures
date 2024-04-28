@@ -50,6 +50,20 @@ class BinarySearchTree {
       insertNode(root, data);
     }
 
+    void removeNode(Node*& current, int data) {
+      /*
+       * TODO: Deleting a node
+       *  Cases:
+       *    1. No child -> assign parent pointer to null
+       *    2. Single child -> replace node with child and update pointers
+       *    3. Two children -> inorder successor or inorder predecessor
+       */
+    }
+
+    void remove(int data) {
+      removeNode(root, data);
+    }
+
     // nodes in non-descending order; left child -> root -> right child
     void inOrder(Node* current) {
       if (current != nullptr) {
@@ -63,9 +77,34 @@ class BinarySearchTree {
       inOrder(root);
     }
 
+    // root -> left child -> right child
+    void preOrder(Node* current) {
+      if (current != nullptr) {
+        std::cout << current->data << "\n";
+        preOrder(current->left);
+        preOrder(current->right);
+      }
+    }
+
+    void printPreOrder() {
+      preOrder(root);
+    }
+
+    // left child -> right child -> root
+    void postOrder(Node* current) {
+      if(current != nullptr) {
+        postOrder(current->left);
+        postOrder(current->right);
+        std::cout << current->data << "\n";
+      }
+    }
+
+    void printPostOrder() {
+      postOrder(root);
+    }
+
   private:
     Node* root;
-
 };
 
 int main() {
@@ -85,7 +124,12 @@ int main() {
   binarysearchtree.insert(12);
   binarysearchtree.insert(18);
 
+  std::cout << "INODER\n";
   binarysearchtree.printInOrder();
+  std::cout << "PREORDER\n";
+  binarysearchtree.printPreOrder();
+  std::cout << "POSTORDER\n";
+  binarysearchtree.printPostOrder();
 
   return 0;
 }
