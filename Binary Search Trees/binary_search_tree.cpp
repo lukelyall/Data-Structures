@@ -52,16 +52,93 @@ class BinarySearchTree {
 
     void removeNode(Node*& current, int data) {
       /*
-       * TODO: Deleting a node
+       * Deleting a node
        *  Cases:
        *    1. No child -> assign parent pointer to null
        *    2. Single child -> replace node with child and update pointers
        *    3. Two children -> inorder successor or inorder predecessor
        */
+
+      if (current == nullptr) {
+        return;
+      }
+
+      if (current->data < data) {
+        removeNode(current->right, data);
+      }
+      else if (current->data > data) {
+        removeNode(current->left, data);
+      }
+      else {
+        // case 1: no child
+        if (current->left == nullptr && current->right ==nullptr) {
+          delete current;
+          current = nullptr;
+        }
+        // case 2: right child
+        else if (current->left == nullptr && current->right != nullptr) {
+          Node* temp = current;
+          current = current->right;
+          delete temp;
+        }
+        // case 2: left child
+        else if (current->left != nullptr && current->right == nullptr) {
+          Node* temp =current;
+          current = current->left;
+          delete temp;
+        }
+        // case 3: two children
+        else {
+          // inorder successor - smallest node of the right child
+          Node* temp = current->right;
+          while (temp->left != nullptr) {
+            temp = temp->left;
+          }
+          current->data = temp->data;
+          removeNode(current->right, temp->data);
+
+          /*
+           * inorder predecessor - largest of the left child
+           * Node* temp = current->left;
+           * while (temp->right != nullptr) {
+           *  temp = temp->right; 
+           * }
+           * current->data = temp->data;
+           * removeNode(current->left, temp->data);
+           */
+
+        }
+      }
     }
 
     void remove(int data) {
       removeNode(root, data);
+    }
+
+    bool searchForData(Node* current, int data) {
+      if (current == nullptr) {
+        return false;
+      }
+      
+      if (current->data == data) {
+        return true;
+      }
+
+      if (data < current->data) {
+        return searchForData(current->left, data);
+      }
+      else {
+        return searchForData(current->right, data);
+      }
+    }
+
+    void search(int data) {
+      if (searchForData(root, data)) {
+        std::cout << "found: " << data << "\n";
+      }
+      else {
+        std::cout << "could not find: " << data << "\n";
+      }
     }
 
     // nodes in non-descending order; left child -> root -> right child
@@ -131,5 +208,12 @@ int main() {
   std::cout << "POSTORDER\n";
   binarysearchtree.printPostOrder();
 
+  std::cout << "------------------\n";
+  binarysearchtree.remove(5);
+  binarysearchtree.printInOrder();
+
+  binarysearchtree.search(5);
+  binarysearchtree.search(10);
+  
   return 0;
 }
