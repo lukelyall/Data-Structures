@@ -15,12 +15,23 @@
 
 struct Node {
   int data;
+  int color;
+  Node* left;
+  Node* right;
 };
 
 class RedBlackTree {
-  
+  public:
+    RedBlackTree() {
+      root = nullptr;
+    }
+
+  private:
+    Node* root;
 };
 
 int main() {
+  RedBlackTree redblacktree;
+
   return 0;
 }
