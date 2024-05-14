@@ -51,154 +51,6 @@ class RedBlackTree {
       temp->right = nullptr;
     }
     
-    // TODO: fix recoloring and rotation of tree after deletion
-
-    void deleteNode(Node*& current, int data) {
-      if (current == nullptr) {
-        return;
-      }  
-      if (current->data < data) {
-        deleteNode(current->right, data);
-      }
-      else if (current->data > data) {
-        deleteNode(current->left, data);
-      }
-      else {
-        // cases:
-        //   no children: delete node
-        //   one child: replace node with child
-        //   two children: replace node with inorder successor (leftmost of right subtree)
-        
-        // no children case
-        if (current->left == nullptr && current->right == nullptr) {
-          delete current;
-          current = nullptr;
-        }
-        else if (current->left != nullptr && current->right != nullptr) {
-          Node* successor = findInOrderSuccessor(current);
-          current->data = successor->data;
-          deleteNode(current->right, successor->data);
-        }
-        else {
-          Node* child = nullptr;
-          if (current->left != nullptr) {
-            child = current->left;
-          }
-          else {
-            child = current->right;
-          }
-          delete current;
-          current = child;
-        }
-      }
-    }
-
-    void deleteByData(int data) {
-      deleteNode(root, data);
-    }
-
-    Node* findInOrderSuccessor(Node*& current) {
-      if (current == nullptr) {
-        return nullptr;
-      }
-      
-      if (current->right != nullptr) {
-        current = current->right;
-        while (current->left != nullptr) {
-          current = current->left;
-        }
-        return current;
-      }
-      else {
-        return nullptr;
-      }
-    }
-
-    void fixTree(Node*& current) {
-      // fix tree after a delete
-
-      // root case
-      if (current == root) {
-        current->color = 0;
-        return;
-      }
-
-      Node* parent = findParent(current);
-      Node* sibling = findSibling(current);
-
-      if (sibling != nullptr && sibling->color == 1) {
-        parent->color = 1;
-        sibling->color = 0;
-        if (current == parent->left) {
-          Node* grandfather = findGrandfather(current);
-          rightRotation(sibling, parent, grandfather);
-        }
-        else {
-          Node* grandfather = findGrandfather(current);
-          leftRotation(sibling, parent, grandfather);
-        }
-      }
-
-      if (parent->color == 0 && (sibling == nullptr || sibling->color == 0)) {
-        if (sibling != nullptr) {
-          sibling->color = 1;
-        }
-        fixTree(parent);
-        return;
-      }
-
-      if (parent->color == 1 && (sibling == nullptr || sibling->color == 0)) {
-        if (sibling != nullptr) {
-          sibling->color = 1;
-        }
-        parent->color = 0;
-        return;
-      } 
-
-      if (current == parent->left && (sibling->left != nullptr && sibling->left->color == 1) && (sibling->right == nullptr || sibling->right->color == 0)) {
-        sibling->color = 1;
-        sibling->left->color = 0;
-        rightRotation(sibling->left, sibling, parent);
-      } 
-      else if (current == parent->right && (sibling->right != nullptr && sibling->right->color == 1) && (sibling->left == nullptr || sibling->left->color == 0)) {
-        sibling->color = 1;
-        sibling->right->color = 0;
-        leftRotation(sibling->right, sibling, parent);
-      }
-
-      if (current == parent->left && sibling->right != nullptr && sibling->right->color == 1) {
-        sibling->color = parent->color;
-        parent->color = 0;
-        sibling->right->color = 0;
-        Node* grandfather = findGrandfather(current);
-        leftRotation(sibling, parent, grandfather);
-      } 
-      else if (current == parent->right && sibling->left != nullptr && sibling->left->color == 1) {
-        sibling->color = parent->color;
-        parent->color = 0;
-        sibling->left->color = 0;
-        Node* grandfather = findGrandfather(current);
-        rightRotation(sibling, parent, grandfather);
-      }
-
-    }
-
-    Node* findSibling(Node*& current) {
-      if (current == nullptr) {
-        return nullptr;
-      }
-      Node* parent = findParent(current);
-      Node* sibling = nullptr;
-      if (parent->left == current) {
-        sibling = parent->right;
-        return sibling;
-      }
-      else {
-        sibling = parent->left;
-        return sibling;
-      }
-    }
-    
     void insertNode(Node*& current, int data) {
       // insert same as a bst but call functions for recoloring and rotation
       if(current == nullptr) {
@@ -224,6 +76,141 @@ class RedBlackTree {
       insertNode(root, data);
     }
 
+    // TODO: fix coloring of tree
+    void deleteNode(Node*& current, int data) {
+      if (current == nullptr) {
+        return;
+      }  
+      if (current->data < data) {
+        deleteNode(current->right, data);
+      }
+      else if (current->data > data) {
+        deleteNode(current->left, data);
+      }
+      else {
+        // cases:
+        //   no children: delete node
+        //   one child: replace node with child
+        //   two children: replace node with inorder successor (leftmost of right subtree)
+        
+        // no children case
+        if (current->left == nullptr && current->right == nullptr) {
+          // if red: delete (no other changes needed)
+          if (current->color == 1) {
+            delete current;
+            current = nullptr;
+          }
+          else {
+            blackNodeDelete(current);
+            delete current;
+            current = nullptr;
+          }
+        }
+
+        // one left child case
+        else if (current->left != nullptr && current->right == nullptr) {
+          Node* temp = current;
+          current = current->left;
+          if (temp->color == 0) {
+              blackNodeDelete(current);
+          }
+          delete temp;
+        }
+
+        // one right child case
+        else if (current->left == nullptr && current->right != nullptr) {
+          Node* temp = current;
+          current = current->right;
+          if (temp->color == 0) {
+              blackNodeDelete(current);
+          }
+          delete temp;
+        }
+
+        // two children case
+        else {
+          Node* successor = findInOrderSuccessor(current);
+          int temp_data = successor->data;
+          deleteNode(current->right, temp_data);
+          current->data = temp_data;
+        }
+      }
+    }
+
+    void deleteByData(int data) {
+      deleteNode(root, data);
+    }
+
+    // TODO: fix coloring of tree
+    void blackNodeDelete(Node*& current) {
+      // black node cases
+      // rotation cases:
+      //  left-left (ll) case: right rotation on parent, swap colors of parent and sibling
+      //  left-right (lr) case: left rotation on sibling, right rotation on parent, swap colors of parent and sibling
+      //  right-right (rr) case: left rotation on parent, swap colors of parent and sibling
+      //  right-left (rl) case: right rotation on sibling, left rotation on parent, swap colors of parent and sibling
+
+      if (current == nullptr || current == root || current->color == 1) {
+        return;
+      }
+
+      Node* sibling = findSibling(current);
+
+      if (sibling != nullptr && sibling->color == 1) {
+        // if black node: check sibling
+        // red sibling: delete and rotate
+        Node* grandfather = findGrandfather(current);
+        Node* parent = findParent(current);
+        sibling->color = 0;
+        parent->color = 1;
+        if (sibling == parent->left) {
+          rightRotation(sibling, parent, grandfather);
+        }
+        else {
+          leftRotation(sibling, parent, grandfather);
+        }
+        blackNodeDelete(current);
+      }
+      // black sibling + black nephews: delete node, make sibling red and parent black
+      // black sibling + red nephews: delete node and rotate
+      else if (sibling != nullptr && sibling->color == 0 &&
+             (sibling->left == nullptr || sibling->left->color == 0) &&
+             (sibling->right == nullptr || sibling->right->color == 0)) {
+        Node* parent = findParent(current);
+
+        // If parent is red, make sibling red and parent black
+        if (parent != nullptr && parent->color == 1) {
+          parent->color = 0;
+          sibling->color = 1;
+        }
+        // If parent is black, make sibling red and recursively call blackNodeDelete on parent
+        else if (parent != nullptr && parent->color == 0) {
+          sibling->color = 1;
+          blackNodeDelete(parent);
+        }
+      }
+      // If sibling is black and one nephew is red
+      else if (sibling != nullptr && sibling->color == 0) {
+        Node* parent = findParent(current);
+        Node* grandparent = findGrandfather(current);
+
+        // Rotate based on nephew position
+        if (sibling->left != nullptr && sibling->left->color == 1) {
+          sibling->left->color = sibling->color;
+          sibling->color = parent->color;
+          parent->color = 0;
+          rightRotation(sibling->left, sibling, parent);
+        } 
+        else if (sibling->right != nullptr && sibling->right->color == 1) {
+          sibling->right->color = sibling->color;
+          sibling->color = parent->color;
+          parent->color = 0;
+          leftRotation(sibling->right, sibling, parent);
+        }
+        blackNodeDelete(current);
+      }
+    }
+
     void recolor(Node*& current) {
       if(current == root) {
         current->color = 0;
@@ -244,10 +231,10 @@ class RedBlackTree {
 
       else if(current != root) {
         Node* parent = findParent(current);
-        if (parent == nullptr && parent->color == 0) {
+        if (parent != nullptr && parent->color == 0) {
           return;
         }
-        else if (parent->color == 1) {
+        else if (parent != nullptr && parent->color == 1) {
           Node* uncle = findUncle(parent);
           if (uncle != nullptr && uncle->color == 1) {
             parent->color = 0;
@@ -320,21 +307,37 @@ class RedBlackTree {
       // chosen child swaps places with its parent while keeping its right child
       // the left child is switched to be the original parent node
       // the child nodes old left child becomes the right child of the original parent node
-      if (grandparent == nullptr) {
+      if (grandparent == nullptr || parent == nullptr || current == nullptr) {
         std::cout << "LEFT ROTATION ERROR: grandparent does not exist\n";
         return;
       }
       
       Node* temp = parent->right;
-      parent->right = current->left;
-      current->left = parent;
-      parent = temp;
+      if (temp == nullptr) {
+        std::cout << "LEFT ROTATION ERROR: pointers\n";
+        return;
+      }
+
+      parent->right = temp->left;
+      temp->left = parent;
 
       if (grandparent->left == current) {
         grandparent->left = temp;
       }
       else {
         grandparent->right = temp;
+      }
+
+      if (current != nullptr) {
+        if (current->left != nullptr) {
+          current->left = nullptr;
+        }
+        else {
+          std::cout << "current left nullptr/n";
+        }
+      }
+      else {
+        std::cout << "current nullptr\n";
       }
     }
 
@@ -342,15 +345,19 @@ class RedBlackTree {
       // chosen child swaps places with its parent while keeping its left child
       // the right child is switched to the original parent node
       // the chld nodes old right child becomes the left child of the original parent node
-      if (grandparent == nullptr) {
+      if (grandparent == nullptr || current == nullptr || parent == nullptr) {
         std::cout << "RIGHT ROTATION ERROR: grandparent does not exist\n";
         return;
       }
       
       Node* temp = parent->left;
-      parent->left = current->right;
-      current->right = parent;
-      parent = temp;
+      if (temp == nullptr) {
+        std::cout << "RIGHT ROTATION ERROR: pointers\n";
+        return;
+      }
+
+      parent->left = temp->right;
+      temp->right = parent;
 
       if (grandparent->left == current) {
         grandparent->left = temp;
@@ -359,6 +366,17 @@ class RedBlackTree {
         grandparent->right = temp;
       }
 
+      if (current != nullptr) {
+        if (current->right != nullptr) {
+          current->right = nullptr;
+        }
+        else {
+          std::cout << "current right nullptr/n";
+        }
+      }
+      else {
+        std::cout << "current nullptr\n";
+      }
     }
 
     Node* findParent(Node*& child) {
@@ -430,6 +448,56 @@ class RedBlackTree {
       return nullptr;
     }
 
+    Node* findSibling(Node*& current) {
+      if (current == nullptr) {
+        return nullptr;
+      }
+      Node* parent = findParent(current);
+      Node* sibling = nullptr;
+      if (parent->left == current) {
+        sibling = parent->right;
+        return sibling;
+      }
+      else {
+        sibling = parent->left;
+        return sibling;
+      }
+    }
+
+    Node* findInOrderSuccessor(Node*& current) {
+      if (current == nullptr) {
+        return nullptr;
+      }
+      
+      if (current->right != nullptr) {
+        current = current->right;
+        while (current->left != nullptr) {
+          current = current->left;
+        }
+        return current;
+      }
+      else {
+        return nullptr;
+      }
+    }
+
+    Node* findInOrderPredecessor(Node*& current) {
+      if (current == nullptr) {
+        return nullptr;
+      }
+
+      if (current->left != nullptr) {
+        current = current->left;
+        while (current->right != nullptr) {
+          current = current->right;
+        }
+        return current;
+      }
+      else {
+        return nullptr;
+      }
+    }
+
     void printInOrder(Node* node) {
       if (node == nullptr) {
         return;
@@ -458,7 +526,7 @@ int main() {
   redblacktree.insert(6);
   redblacktree.insert(8);
 
-  // redblacktree.deleteByData(2);
+  redblacktree.deleteByData(2);
 
   redblacktree.printInOrderTree();
 
